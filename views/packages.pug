@@ -1,0 +1,34 @@
+html
+  head
+    title Package Dashboard
+body
+  h1= message
+  div
+    table#packageTable
+      thead
+        tr
+          th Package name
+          th npm
+          th Vulerabilities
+          th lastWeek
+          th full stats
+          th deps fresh?
+      tbody
+        each pkg, i in packages
+          tr
+            td
+              a(href='https://www.npmjs.com/package/' + pkg.name) #{pkg.name}
+            td
+              a(href='https://www.npmjs.com/package/' + pkg.name)
+                img(src='https://img.shields.io/npm/v/' + pkg.name + '.svg')
+            td
+              a(href='https://snyk.io/test/npm/' + pkg.name)
+                img(src='https://snyk.io/test/npm/' + pkg.name + '/badge.svg')
+            td= pkg.downloads.lastWeek
+            td
+              a(href='https://npm-stat.com/charts.html?package=' + pkg.name) stats
+            td
+              a(href='/deps?pkgName=' + pkg.name) #{pkg.depsUpToDate}
+
+
+

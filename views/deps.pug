@@ -1,0 +1,21 @@
+html
+  head
+    title Dependency status
+body
+  h1= message
+  div
+    table#dependencyTable
+      thead
+        tr
+          th Up to date?
+          th Dependency Name
+          th wanted
+          th stable
+      tbody
+        each dep, i in dependencies
+          tr
+            td= dep.upToDate
+            td
+              a(href='https://www.npmjs.com/package/' + dep.name) #{dep.name}
+            td= dep.wanted
+            td= dep.stable
