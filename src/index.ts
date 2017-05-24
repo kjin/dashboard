@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as pify from 'pify';
 import * as semver from 'semver';
 
+const DEFAULT_USERS = 'google-admin,google-cloud-admin,grpc-packages'
 const david = require('david');
 const got = require('got');
 const npmUserPackages = require('npm-user-packages');
@@ -22,9 +23,15 @@ app.set('view engine', 'pug');
 
 app.use(express.static('public'));
 
-app.get('/packages', async (_req, res) => {
+app.get('/', async (_req, res) => {
+  console.log('request for /');
+  res.render('index');
+});
+
+app.get('/packages', async (req, res) => {
   console.log('requesting user packages');
-  const packageList = await getUserPackages(['grpc-packages', 'google-admin'/*, 'google-cloud-admin'*/]);
+  const users = (req.query.pkgName || DEFAULT_USERS).split(',');
+  const packageList = await getUserPackages(users);
   res.render('packages',
     { message: 'Google Package Dashboard', packages: packageList });
 });
