@@ -1,3 +1,16 @@
+const config = {
+  // projectId: 'carrot-cake-139920',
+  allowExpressions: true
+};
+
+// const path = require('path');
+
+// process.env.GOOGLE_APPLICATION_CREDENTIALS = path.join(__dirname, '../../creds.json');
+
+require('@google-cloud/trace-agent').start(config);
+require('@google-cloud/debug-agent').start(config);
+const errors = require('@google-cloud/error-reporting')(config);
+const logging = require('@google-cloud/logging')(config);
 
 import * as express from 'express';
 import * as pify from 'pify';
@@ -8,6 +21,23 @@ const david = require('david');
 const got = require('got');
 const npmUserPackages = require('npm-user-packages');
 const packageJson = require('package-json');
+
+const logs : Array<String> = [];
+const consoleLog = logging.log('console-log');
+const oldConsoleLog = console.log;
+const oldConsoleError = console.error;
+console.log = function() {
+  const text = Array.prototype.slice.call(arguments, 0).join(' ');
+  logs.push(text);
+  const myEntry = consoleLog.entry({}, text);
+  consoleLog.info(myEntry);
+  oldConsoleLog.apply(this, arguments);
+}
+console.error = function() {
+  const text = Array.prototype.slice.call(arguments, 0).join(' ');
+  logs.push(`<font color="red">${text}</font>`);
+  oldConsoleError.apply(this, arguments);
+}
 
 const getDependencies = pify(david.getDependencies);
 
@@ -28,6 +58,18 @@ app.get('/', async (_req, res) => {
   res.render('index');
 });
 
+app.get('/logs', async (_req, res) => {
+  res.send(`<p>${logs.join('<br />')}</p>`);
+});
+
+app.get('/not-an-endpoint', (_req, _res, next) => {
+  next(new Error('This isn\'t an endpoint'));
+});
+
+app.get('/is-this-v3', async (_req, res) => {
+  res.send('no');
+});
+
 app.get('/packages', async (req, res) => {
   console.log('requesting user packages');
   const users = (req.query.pkgName || DEFAULT_USERS).split(',');
@@ -46,6 +88,8 @@ app.get('/deps', async (req, res) => {
     dependencies: dependencies
   });
 });
+
+app.use(errors.express);
 
 app.listen(8080, () => { console.log('Listening on port 8080'); });
 
